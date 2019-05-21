@@ -1,0 +1,81 @@
+---
+title: "STAT429 HW4"
+author: "Taiga Hasegawa(taigah2)"
+date: "2018/11/5"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Question1 
+
+```{r}
+rec = scan("cmort.dat")
+data=rec
+y=mean(data)
+data_new=data-y
+rec.yw=ar.yw(data_new,order=2)
+n=length(rec)
+```
+The mean value of x is $\mu =E(X_t)=$ `y`
+
+```{r}
+rec.yw$ar
+phi1=rec.yw$ar[1]
+phi2=rec.yw$ar[2]
+```
+These are the point estimates of $\phi_1$ and $\phi_2$.
+
+```{r}
+rec.yw$var.pred
+```
+
+This is the point estimate of $\sigma^2$.
+
+```{r}
+sd=sqrt(diag(rec.yw$asy.var.coef))
+stat1=(phi1-0.4)/sd[1]
+stat2=(phi2-0.4)/sd[2]
+2*pnorm(abs(stat1),lower.tail = FALSE)
+2*pnorm(abs(stat2),lower.tail = FALSE)
+```
+Both p-value is over 30%. This means that we cannot reject the null hypothesis. The data is compatible with the hypothesis.
+
+##Question 4
+
+```{r}
+P=4
+Q=4
+crit1=matrix(0,P+1,Q+1)
+crit2=matrix(0,P+1,Q+1)
+for (j in 0:P)
+{
+for (k in 0:Q)
+{
+dataML=arima(data,order=c(j,0,k),method="ML")
+#AICC
+crit1[j+1,k+1]=n*log(dataML$sigma)+2*(j+k+1)*n/(n-j-k-2)
+#BIC
+crit2[j+1,k+1]=n*log(dataML$sigma)+(j+k+1)*log(n)
+
+}
+}
+
+```
+
+```{r}
+crit1
+crit2
+```
+The best model is ARIMA(3,0,1) because the BIC is the smallest when the model is ARIMA(3,0,1)
+
+```{r}
+rec.ML<-arima(data,order=c(3,0,1),method="ML")
+tsdiag(rec.ML,gof.lag=20)
+```
+If you see this, you can know that ACF of Residuals is between the blue line and p-values for Ljung-Box statistics are all above the blue line. This means that this model has almost 0 ACF of residuals. In addition we can be in favor of the fact that autocorrelations of data is zero. 
+

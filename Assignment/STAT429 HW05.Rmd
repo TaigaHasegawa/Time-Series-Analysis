@@ -1,0 +1,95 @@
+---
+title: "STAT429 HW05"
+author: "Taiga Hasegawa(taigah2)"
+date: "2018/11/28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+##Question1
+```{r}
+library(astsa)
+data(oil)
+acf(as.vector(oil),50)
+lnoil=diff(log(oil))
+acf(as.vector(lnoil), 50)
+pacf(as.vector(lnoil), 50)
+```
+If you see acf and pacf, we can say that ACF is cutting off at lag 2 and PACF is taking off. This suggest that this follows the MA(2). We can also say that ACF is taking off and PACF is cutting off at lag 3. This suggest that this follows the AR(3) model. 
+```{r}
+lnoil.ma = arima(lnoil, order = c(0, 0, 2))
+lnoil.ar = arima(lnoil, order = c(3, 0, 0))
+tsdiag(lnoil.ma, gof.lag = 20)
+tsdiag(lnoil.ar,gof.lag = 20)
+```
+As for MR(2) model, there may be outliers, with a few values exceeding 4 standard deviations in magnitude. The ACF of the standardized residuals shows no apparent departure from the model assumptions, and the Q-statistic is not significant before lag 3.
+As for AR(3) model, there may be outliers, with a few values exceeding 4 standard deviations in magnitude. The ACF of the standardized residuals shows no apparent departure from the model assumptions, and the Q-statistic is not significant before lag 8.
+
+##Question2
+```{r}
+data("unemp")
+diffunemp=diff(diff(unemp),12)
+crit2<-array(0,dim=c(3,3,3,3))
+for (p in 1:3)
+{
+for (q in 1:3)
+{
+for (P in 1:3)
+{
+for (Q in 1:3)
+{
+diffunemp.fit = arima(diffunemp, order=c(p-1,0,q-1), seasonal=list(order=c(P-1,0,Q-1), period=12))
+crit2[p,q,P,Q]<-diffunemp.fit$aic
+}
+}
+}
+}
+crit2
+min(crit2)
+```
+This shows that (p,q,P,Q)=(3,1,1,3) has the smallest aic. 
+```{r}
+sarima.for(unemp,12,2,1,0,0,1,2,12)
+```
+##Question3
+
+(a)
+```{r}
+data(jj)
+trend =time(jj) - 1970
+Q =factor(cycle(jj) )
+reg1 =lm(log(jj)~0 + trend + Q, na.action=NULL)# no interceptsummary(reg1)
+summary(reg1)
+```
+
+(b)
+1.052793 + 1.080916 + 1.151024 + 0.882266 = 4.166999
+
+(c)
+It decreases by $\beta_4???\beta_3$=???0.268758 and by (0.269/1.151024)??100 = 23.37049%
+
+(d)
+```{r}
+reg2 =lm(log(jj)~ trend + Q, na.action=NULL)
+summary(reg2)
+```
+Intecept is now the same with coefficient of Q1. This is not good because all qurters have intercept. 
+
+(e)
+```{r}
+par(mfrow=c(1,2))
+plot(log(jj), main="plot of data and fitted value")
+lines(fitted(reg1), col="blue")
+plot(log(jj)-fitted(reg1), main="plot of residuals")
+```
+
+The right graph shows that residuals do not follow any pattern. Hence it looks like white. 
+
+
+
+
+
+
+

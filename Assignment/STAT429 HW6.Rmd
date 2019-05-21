@@ -1,0 +1,136 @@
+---
+title: "STAT429 HW06"
+author: "Taiga Hasegawa(taigah2)"
+date: "2018/12/12"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Question3 
+```{r}
+library(astsa)
+data(sunspotz)
+per= spec.pgram(sunspotz,taper=0, log="no")
+1/(which(per$spec==sort(per$spec,decreasing = TRUE)[1])/per$n.used)
+1/(which(per$spec==sort(per$spec,decreasing = TRUE)[2])/per$n.used)
+1/(which(per$spec==sort(per$spec,decreasing = TRUE)[3])/per$n.used)
+1/(which(per$spec==sort(per$spec,decreasing = TRUE)[4])/per$n.used)
+```
+There are 4 predominant periods, 22, 20, 23, 160 but the third one is not predominant period in the periodogram. Then I omit the third one and conclude that 22, 20, 160 is the predominant cycle. Because each year has 2 observations, we can also say that the predominat periods are 10, 11, and 80. 
+
+```{r}
+U = qchisq(.025,2) 
+L = qchisq(.975,2) 
+2*per$spec[22]/L 
+2*per$spec[22]/U 
+2*per$spec[24]/L 
+2*per$spec[24]/U 
+2*per$spec[3]/L 
+2*per$spec[3]/U 
+```
+
+The confidence interval for period 22 is (8804.265,1282807). That for period 20 is (8290.672,1207975). That for period 160 is (3428.087,499482.4).
+
+##Question4
+```{r}
+k=kernel("daniell",c(7,7))
+l=kernel("daniell",c(14,14))
+ave_1= spec.pgram(sunspotz, k, taper=0, log="no")
+ave_2= spec.pgram(sunspotz, l, taper=0, log="no")
+1/(which.max(ave_1$spec)/ave_1$n.used)
+1/(which.max(ave_2$spec)/ave_2$n.used)
+```
+When spans=c(7,7), the predominant period is 22. When spans=c(14,14), the predominant period is 23. 
+```{r}
+ df_1 = ave_1$df   
+ U_1 = qchisq(.025,df_1) 
+ L_1 = qchisq(.975,df_1) 
+df_1*ave_1$spec[22]/L_1
+df_1*ave_1$spec[22]/U_1
+```
+Confidence interval when spans=c(7,7) is (5076.224,11945.4).
+```{r}
+ df_2 = ave_2$df   
+ U_2 = qchisq(.025,df_2) 
+ L_2 = qchisq(.975,df_2) 
+df_2*ave_2$spec[21]/L_2
+df_2*ave_2$spec[21]/U_2
+```
+Confidence interval when spans=c(14,14) is (3706.613,6832.477).
+Spectral estimate is geting smoother and smoother as the frequency band is larger. 
+
+##Question4
+```{r}
+acf(sunspotz,lag.max=50)
+pacf(sunspotz)
+```
+The ACF and PACF shows that this model is AR(2).
+```{r}
+rec.ML<-arima(sunspotz,order=c(2,0,0),method="ML")
+rec.ML
+```
+This is the estimation of coefficients of AR(2).
+
+```{r}
+armaspec=function(T=5000,arcoeff,macoeff,vare){
+
+## Input
+## T = resolution in frequency (length of time series)
+## arcoeff = vector of coefficients of the AR component of the time series
+## macoeff = vector of coefficients of the MA component
+## vare = variance of the white noise error
+
+## Output 
+## specout = spectrum of the ARMA process defined from (0, pi]
+
+## Note: This is the parameterization of the ARMA(p,q) process 
+## that I will adopt in this program 
+## X(t) = arcoeff[1]X(t-1) + ... + arcoeff[p]X(t-p) + 
+## W(t) + macoeff[1]W(t-1) + ... + macoeff[q]W(t-q)
+## I will assume that the process is already causal and 
+## invertible, i.e., the user has done these checks before
+## attempting to derive the spectrum.
+
+freq = 2*pi*seq(0, T-1)/T;
+
+arcoeff = c(1, -arcoeff);
+macoeff = c(1, macoeff);
+
+theta=c(1:T); phi=c(1:T);
+
+for (k in 1:(T)){
+
+theta.temp=0;
+for (m in 1: (length(macoeff)))
+{
+theta.temp = theta.temp + macoeff[m]*complex(mod=1, arg=-1*m*freq[k])}
+theta[k] = (abs(theta.temp))^2
+
+phi.temp=0;
+for (m in 1: (length(arcoeff))){
+phi.temp = phi.temp + arcoeff[m]*complex(mod=1, arg=-1*m*freq[k])}
+phi[k] = (abs(phi.temp))^2
+
+}
+
+spec = vare*(theta)/(phi)
+specout = spec[2:(T/2 + 1)]
+return(specout)
+}
+```
+
+```{r}
+truespec=armaspec(arcoeff=c(1.69,-0.788), macoeff=c(0), vare=1)
+1/(which.max(truespec)/length(truespec))
+```
+The main periodicity is 11. 
+```{r}
+plot(1:length(truespec),truespec,col=2)
+```
+Autoregressive spectral estimator is much smoother than the conventional nonparametric estimator but the distribution is alike. 
+
+
+

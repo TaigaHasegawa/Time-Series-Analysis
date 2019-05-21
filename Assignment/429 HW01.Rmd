@@ -1,0 +1,249 @@
+---
+title: "STAT 429 HW01"
+author: "Taiga Hasegawa"
+date: "2018/9/4"
+output: 
+  pdf_document: 
+    keep_tex: yes
+    latex_engine: xelatex
+---
+##1.
+
+(a)
+
+```{r}
+s=c(rep(0,100),10*exp(-(1:100)/20)*cos(2*pi*1:100/4))
+x=s+rnorm(200)
+plot.ts(x)
+```
+
+(b)
+
+```{r}
+s=c(rep(0,100),10*exp(-(1:100)/200)*cos(2*pi*1:100/4))
+x=s+rnorm(200)
+plot.ts(x)
+```
+
+(c)
+
+series(a) looks like earthwake series in the point that oscillation is relateively smooth. On the other hand, series(b) looks like explosion series because their oscillation is violent. 
+
+```{r}
+exp_20=exp(-1:100/20)
+exp_200=exp(-1:100/200)
+par(mfrow=c(1,2))
+plot.ts(exp_20,ylim=c(1,5))
+plot.ts(exp_200,ylim=c(1,5))
+```
+
+As you can see from the graph above, $exp\left\{-t/20\right\}$ incresas more sharply than $exp\{-t/200\}$.
+
+##2
+1.
+
+Mean: $E[X_t]=a+bE[Z_t]+cE[Z_{t-2}]=a$
+
+autocovariance: 
+
+$Cov(X_t,X_s)=b^2\sigma^2+c^2\sigma^2$   (t=s)
+
+$Cov(X_t,X_s)=E[(bZ_t+cZ_{t-2})(bZ_s+cZ_s-2)]=0$   (|t-s|=1)
+
+$Cov(X_t,X_s)=bc\sigma^2$    (|t-s|=2)
+
+$Cov(X_t,X_s)=0$   (otherwise)
+
+They are all independent of t. Hence, this is stationary. 
+
+2.
+
+Mean: $E[X_t]=cos(ct)E[Z_1]+sin(ct)E[Z_{2}]=0$
+
+autocovariance: $Cov(X_t,X_s)=cos^2(ct)\sigma^2+sin^2(cs)\sigma^2$
+
+This autocovariance depends on t. Hence, this is not stationary.
+
+3.
+
+Mean: $E[X_t]=cos(ct)E[Z_t]+sin(ct)E[Z_{t-1}]=0$
+
+autocovariance: 
+
+$Cov(X_t,X_s)=cos^2(ct)\sigma^2+sin^2(cs)\sigma^2$  (t=s)
+
+$Cov(X_t,X_s)=cos(ct)sin(ct)\sigma^2$  (|t-s|=1)
+
+$Cov(X_t,X_s)=0$  (otherwise)
+
+This depends on t. Hence, this is not stationary.
+
+4.
+
+Mean: $E[X_t]=a$
+
+autocovariance: $Cov(X_t,X_s)=b^2\sigma^2$
+
+Hecne, this is stationary.
+
+5.
+
+Mean: $E[X_t]=0$
+
+autocovariance: $Cov(X_t,X_s)=cos^2(ct)\sigma^2$
+
+This autocovariance depends on t. Hence, this is not stationary. 
+
+6.
+
+Mean: $E[X_t]=E[Z_t]E[Z_{t-1}]=0$
+
+autocovariance: 
+
+$Cov(X_t,X_s)=E[Z_t^2]E[Z_{t-1}^2]=\sigma^4$  (t=s)
+
+$Cov(X_t,X_s)=0$ (|t-s|=1)
+
+$Cov(X_t,X_s)=0$  (otherwise)
+
+##3
+
+(a)
+
+autocovariance: 
+
+$Cov(X_t,X_s)=1+0.8^2=1.64$  (t=s)
+
+$Cov(X_t,X_s)=0.8$  (|t-s|=2)
+
+$Cov(X_t,X_s)=0$  (otherwise)
+
+
+autocorrelation: 
+
+$\rho(h)=1$  (t=s)
+
+$\rho(h)=\frac{0.8}{1+0.8^2}=0.48780$  (|t-s|=1)
+
+$\rho(h)=0$  (otherwise)
+
+(b)
+
+$Var[\frac{(X_1+X_2+X_3+X_4)}{4}]=Var[\frac{Z_1+Z_2+Z_3+0.8Z_1+Z_4+0.8Z_2}{4}]=Var[\frac{1.8Z_1+1.8Z_2+Z_3+Z_4}{4}]=0.45^2+0.45^2+0.25^2+0.25^2=0.405+0.125=0.53$
+
+(c)
+
+$Var[\frac{(X_1+X_2+X_3+X_4)}{4}]=Var[\frac{Z_1+Z_2+Z_3-0.8Z_1+Z_4-0.8Z_2}{4}]=Var[\frac{0.2Z_1+0.2Z_2+Z_3+Z_4}{4}]=0.05^2+0.05^2+0.25^2+0.25^2=0.005+0.125=0.13$
+
+The variance of $\theta=0.8$ is larger than that of $\theta=-0.8$.
+
+
+##4
+(a)
+
+mean: $E[Y_t]=E[\mu_t]=\mu_t≠constant$
+
+covariance: $Cov(Y_t,Y_{t-k})=cov(\mu_t+\sigma_tX_t,\mu_{t-k}+\sigma_{t-k}X_{t-k})=cov(\sigma_tX_t,\sigma_{t-k}X_{t-k})=\sigma_t\sigma_{t-k}Cov(X_t,X_{t-k})=\sigma_t \sigma_{t-k}\frac{Corr(X_t,X_{t-k})}{\sqrt{Var(X_t)Var(X_{t-k})}}=\sigma_t\sigma_{t-k}\rho_k$
+
+(b)
+
+$Var(Y_t)=Var(\mu_t+\sigma_tX_t)=\sigma_t^2Var(X_t)=\sigma_t^2$
+
+$Corr(Y_t,Y_{t-k})=\frac{Cov(Y_t,Y_{t-k})}{\sqrt{Var(Y_t)Var(Y_{t-k})}}=\frac{\sigma_t\sigma_{t-k}\rho_k}{\sigma_t\sigma_{t-k}}=\rho_k$
+
+Hence the correlation depends only on time lag. However, $Y_t$ is not stationary because the mean function $\mu_t$ is not constant over time. 
+
+(c)
+ 
+If we change the $\mu_t$ into $\mu$ (that does not depend on time) and set $Y_t$ as $Y_t=\mu+\sigma_tX_t$, the mean function of $Y_t$ is $\mu$ and autocorrelation is $\rho_k$. However the autocovariance function is $\sigma_t\sigma_{t-k}\rho_k$. Y_t has a constant mean and correlation free of t but is not stationary.
+
+
+##5
+
+mean: $E(x_t)=E(U_1sin(2\pi\omega_0t))+E(U_2cos(2\pi\omega_0t))=0$
+
+autocovariance: $\gamma(h)=Cov(t,t+h)=E([U_1sin(2\pi\omega_0t)+U_2cos(2\pi\omega_0t)][U_1sin(2\pi\omega_0(t+h))+U_2cos(2\pi\omega_0(t+h))])=E[U_1^2sin(2\pi\omega_0t)sin(2\pi\omega_0(t+h))]+E[U_2^2cos(2\pi\omega_0t)cos(2\pi\omega_0(t+h))]=\sigma^2\frac{1}{2}\left\{cos(2\pi\omega_0 h)-cos(\alpha)\right\}+\sigma^2\frac{1}{2}\left\{cos(\alpha)+cos(2\pi\omega_0h)\right\}=\sigma^2cos(2\pi\omega_0h)$
+
+Hence, this is stationary.
+
+
+##6
+
+(a)
+
+mean:
+
+1. If t is even, $E[X_t]=E[Z_t]=0$. 
+
+2. If t is odd, $E[X_t]=E[(Z_{t-1}^2-1)/\sqrt{2}]=\frac{1-1}{\sqrt{2}}=0$.
+
+autocovariance: 
+
+1. *When t is even*,
+
+$Var(X_t)=1$
+
+if h=1
+
+$Cov(X_t,X_{t+1})=Cov(Z_t,(Z_t^2-1)/\sqrt{2})=E[(Z_t^3-Z_t)/\sqrt{2}]=0$
+
+if h≠0,1
+
+$Cov(X_t,X_{t+h})=0$
+
+2. *When t is odd*,
+
+$Var(X_t)=E[X_t^2]=E[(Z_{t-1}^4-2Z_{t-1}^2+1)/2]=(3-2+1)/2=1$
+
+if h=1
+
+$Cov(X_t,X_{t+1})=E[\frac{Z_{t+1}(Z_{t-1}^2-1)}{\sqrt{2}}]=0$
+
+if h≠0,1
+
+$Cov(X_t,X_{t+h})=0$
+
+That's why, $X_t$ is WN(0,1). However, if t is odd, $X_t$ is obiously correlated with $X_{t-1}$ and so this is not iid noise.
+
+(b)
+
+if n is odd,
+
+$E[X_{n+1}|X_1,X_2 \cdot\cdot\cdot X_n]=E[Z_{n+1}|Z_0,Z_2,\cdot\cdot Z_{n-1}]=0$
+
+if n is even,
+
+$E[X_{n+1}|X_1,X_2 \cdot\cdot\cdot X_n]=E[(Z_n^2-1)/\sqrt{2}|Z_0,Z_2,\cdot\cdot,Z_n]=(Z_n^2-1)/\sqrt{2}$
+
+
+##7
+
+MA(q)=$\sum_{j=-\infty}^{\infty}\psi_jZ_{t-j}$
+
+if j=0 $\Rightarrow$ $\psi_j=1$
+
+elif j=1,2,$\cdot\cdot$ q $\Rightarrow$ $\psi_j=\theta_j$
+
+otherwise $\Rightarrow \psi_j=0$
+
+$Cov(X_t,X_{t+h})=Cov(\sum_{j=-\infty}^{\infty}\psi_jZ_{t-j},\sum_{k=-\infty}^{\infty}\psi_kZ_{t+h-j})=\sum_{j=-\infty}^{\infty}\sum_{k=-\infty}^{\infty}\psi_j\psi_kcov(Z_{t-j},Z_{t+h-k})=\sum_{j=-\infty}^{\infty}\psi_{j+h}\psi_{j}\sigma^2$
+
+Hence,
+
+if |h|$\leq$ q; $\theta_h\sigma^2+\sum_{j=1}^{q-|h|}\theta_{j+|h|}\theta_j\sigma^2$
+
+if |h|>q; 0
+
+fahrenheit_to_celcius = function(degrees_f) {
+   y=5*(degrees_f-32)/9
+   reutrn(y)
+}
+
+celcius_to_fahrenheit = function(degrees_f) {
+  y=9/5*degrees_f+32
+  return(y)
+}
+
+
+
+

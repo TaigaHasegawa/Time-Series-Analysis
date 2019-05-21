@@ -1,0 +1,238 @@
+---
+title: "Stat 432 Homework 2"
+date: "Assigned: Feb 3, 2019; <span style='color:red'>Due: 11:59pm Feb 8, 2019</span>"
+output: pdf_document
+---
+
+> Question 1 (understand $k$-means)
+
+$k$-means is a relatively simple algorithm that can write by ourselves. For this question, you are not allowed to use any existing functions that perform $k$-means directly. Let's first generate some data. You should copy this exact code to generate the same dataset and the initial cluster assignment labels. 
+
+```{r, fig.width= 4, fig.height=4}
+    set.seed(2)
+    n = 10
+    
+    # first coordinate (variable) of each observation
+    x1 = rnorm(n)
+    
+    # second coordinate (variable) of each observation
+    x2 = rnorm(n)
+
+    # we also generate an initial value of the cluster assignments
+    C = sample(1:2, n, replace = TRUE)
+    C
+```
+
+The above code means that we consider just two clusters, and if `C[i] = 1`, we are currently assigning observation `i` to cluster 1, otherwise, its assigned to cluster 2. Hence, we can view this vector $C$ as a cluster assignment function. To visualize the current cluster assignment, you can do the following:
+
+```{r, fig.width= 4, fig.height=4}
+    plot(x1, x2, col = C, pch = 19)
+```
+
+We know that in each iteration of the $k$-means algorithm, we first fix the cluster assignment function and update the cluster means $m_k$, for $k = 1, \ldots, K$; then, fix the cluster means and update the cluster assignment function. 
+
+a. [2 points] Do this iteration once, and output the new cluster assignment function (both the value of the vector `C` and plot it) and the cluster means for both clusters.
+```{r}
+c1_mean_1=mean(x1[C==1])
+c1_mean_2=mean(x2[C==1])
+c2_mean_1=mean(x1[C==2])
+c2_mean_2=mean(x2[C==2])
+```
+
+```{r}
+d1=(x1-c1_mean_1)**2+(x2-c1_mean_2)**2
+d2=(x1-c2_mean_1)**2+(x2-c2_mean_1)**2
+for (i in 1:length(d1)){
+  if(d1[i]<d2[i]){
+    C[i]=1
+  }else{
+    C[i]=2
+  }
+}
+```
+
+```{r}
+C
+```
+
+```{r , fig.width= 4, fig.height=4}
+plot(x1, x2, col = C, pch = 19)
+```
+```{r}
+c1_mean_1=mean(x1[C==1])
+c1_mean_2=mean(x2[C==1])
+c2_mean_1=mean(x1[C==2])
+c2_mean_2=mean(x2[C==2])
+#cluster mean for cluster1
+c(c1_mean_1,c1_mean_2)
+#cluster mean for cluster2
+c(c2_mean_1,c2_mean_2)
+```
+
+
+b. [2 points] Write the above two steps into a single function. Repeatedly call this function to update `C` and the cluster means. When they do not change anymore, stop the algorithm. You should not have an excessively long output for this part. Only output the final result. 
+```{r}
+steps=function(x,y,C){
+  c1_mean_1=mean(x[C==1])
+  c1_mean_2=mean(y[C==1])
+  c2_mean_1=mean(x[C==2])
+  c2_mean_2=mean(y[C==2])
+  d1=(x-c1_mean_1)**2+(y-c1_mean_2)**2
+  d2=(x-c2_mean_1)**2+(y-c2_mean_1)**2
+  for (i in 1:length(d1)){
+    if(d1[i]<d2[i]){
+      C[i]=1
+    }else{
+      C[i]=2
+    }
+  }
+  return(C)
+}
+```
+
+```{r}
+repeat{
+  C1=C
+  C=steps(x1,x2,C)
+  if(all(C==C1)==TRUE){
+    print(C)
+    break
+  }
+}
+
+```
+
+c. [2 points] Based on your final result, calculate and report the within-cluster distance of the $k$-mean algorithm, which is also the objective function used for $k$-means.
+```{r}
+cluster1=data.frame("x1"=x1[C==1],"x2"=x2[C==1])
+cluster2=data.frame("x1"=x1[C==2],"x2"=x2[C==2])
+d1=1/2*sum(dist(cluster1))
+d2=1/2*sum(dist(cluster2))
+d1+d2
+```
+
+
+d. [2 points] Randomly generate another set of initial values for `C` and repeat the above steps. Observe if the two runs lead to the same clustering result. Comment on your findings.
+```{r}
+set.seed(5)
+C_new = sample(1:2, n, replace = TRUE)
+C_new
+```
+```{r}
+repeat{
+  C1=C_new
+  C_new=steps(x1,x2,C_new)
+  if(all(C_new==C1)==TRUE){
+    print(C_new)
+    break
+  }
+}
+
+```
+```{r , fig.width= 4, fig.height=4}
+plot(x1, x2, col = C_new, pch = 19)
+```
+The result is slightly different. One of the observations (10th observation) is labeled differently.  
+
+e. [2 points] Apply any clustering algorithm discussed in the lecture other than $k$-means on the same data set. Compare the result by using this algorithm with what you got by using $k$-means.
+
+I used the hierarchical clustering.
+```{r}
+x=data.frame("x1"=x1,"x2"=x2)
+x.hclust <- hclust(dist(x), method = 'average')
+plot(x.hclust, hang = -1, cex = 0.7)
+```
+
+```{r}
+x.cut <- cutree(x.hclust, 2)
+library(ggplot2)
+ggplot(x, aes(x1,x2)) + 
+		geom_point(alpha = 0.4, size = 3.5) + # true cluster 
+		geom_point(col = x.cut) 
+```
+
+The result was different from the one we got when we used kmeans. There were only two points for the first category when we used hierarchical clustering. On the other hand, there were four points for the first category when we used kmeans clustering. 
+
+> Question 2 (bonus: $k$-means of a picture)
+
+Pick your favorite picture and perform a $k$-means clustering of the pixels (cluster the 3d points of RGB colors). You can use any exsiting functions for this question. Your picture should not be too large, ideally less than $500 \times 500$ pixels. You can shrink your original picture to fit this size. You should perform the following steps. If you need an example of this, read the `R` supplementary file of $k$-means. 
+You are free to google the topic `clustering images` and use existing codes.
+
+a. [1 points] Plot the original picture. 
+
+```{r}
+library(jpeg)
+url <- "https://tk.ismcdn.jp/mwimgs/e/1/1140/img_e17d4ae527773d9cf9ca2a3ec1ccca47397629.jpg"
+# Download the file and save it as "Image.jpg" in the directory
+dFile <- download.file(url, "Image.jpg")
+img <- readJPEG("Image.jpg") 
+```
+
+```{r}
+imgDm <- dim(img)
+
+# Assign RGB channels to data frame
+imgRGB <- data.frame(
+x = rep(1:imgDm[2], each = imgDm[1]),
+y = rep(imgDm[1]:1, imgDm[2]),
+R = as.vector(img[,,1]),
+G = as.vector(img[,,2]),
+B = as.vector(img[,,3])
+  )
+```
+
+```{r}
+library(ggplot2)
+
+# Plot the image
+ggplot(data = imgRGB, aes(x = x, y = y)) + 
+  geom_point(colour = rgb(imgRGB[c("R", "G", "B")])) +
+  labs(title = "Original Image: Colorful Bird") +
+  xlab("x") +
+  ylab("y")
+```
+
+b. [2 points] For $k = 2, 3, 5, 10$, perform $k$-means on the pixels and plot the resulting picture by replacing each pixel with their corresponding cluster mean. 
+```{r}
+kClusters <- 2
+kMeans <- kmeans(imgRGB[, c("R", "G", "B")], centers = kClusters)
+kColours <- rgb(kMeans$centers[kMeans$cluster,])
+```
+
+```{r}
+ggplot(data = imgRGB, aes(x = x, y = y)) + 
+  geom_point(colour = kColours) +
+  labs(title = paste("k-Means Clustering of", kClusters, "Colours")) +
+  xlab("x") +
+  ylab("y")
+```
+```{r}
+kClusters <- 3
+kMeans <- kmeans(imgRGB[, c("R", "G", "B")], centers = kClusters)
+kColours <- rgb(kMeans$centers[kMeans$cluster,])
+ggplot(data = imgRGB, aes(x = x, y = y)) + 
+  geom_point(colour = kColours) +
+  labs(title = paste("k-Means Clustering of", kClusters, "Colours")) +
+  xlab("x") 
+```
+```{r}
+kClusters <- 5
+kMeans <- kmeans(imgRGB[, c("R", "G", "B")], centers = kClusters)
+kColours <- rgb(kMeans$centers[kMeans$cluster,])
+ggplot(data = imgRGB, aes(x = x, y = y)) + 
+  geom_point(colour = kColours) +
+  labs(title = paste("k-Means Clustering of", kClusters, "Colours")) +
+  xlab("x") +
+  ylab("y") 
+```
+```{r}
+kClusters <- 10
+kMeans <- kmeans(imgRGB[, c("R", "G", "B")], centers = kClusters)
+kColours <- rgb(kMeans$centers[kMeans$cluster,])
+ggplot(data = imgRGB, aes(x = x, y = y)) + 
+  geom_point(colour = kColours) +
+  labs(title = paste("k-Means Clustering of", kClusters, "Colours")) +
+  xlab("x") +
+  ylab("y") 
+```
+c. [1 points] If you have to choose a best value for $k$ (not limited to the four settings in the previous question), what would you do? Explain the basis of your decision. 

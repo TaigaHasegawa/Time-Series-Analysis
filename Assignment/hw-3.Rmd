@@ -1,0 +1,139 @@
+---
+title: "Stat 432 Homework 3"
+author: "Taiga Hasegawa(taigah2)"
+date: "Assigned: Feb 8, 2019; <span style='color:red'>Due: 11:59pm Feb 15, 2019</span>"
+output: pdf_document
+---
+
+> Question 1 (dissimilarity matrix)
+
+[3.5 points] Consider $n = 10$ samples with $p = 5$ features (you should copy this code to generate them):
+
+```{r}
+    set.seed(1)
+    x = matrix(rnorm(50), 10, 5)
+    x
+```
+
+Calculate the dissimilarity matrix for this set of data using:
+
+* Euclidean distance
+* $\ell_1$ norm distance (we covered this in class, you can also google the definition)
+
+To show your result, do not print them. Use a heatmap (without reordering the columns and rows) to plot them separately. The position of each cell should match exactly the corresponding position in the dissimilarity matrix. Or more precisely, the $i$th row $j$th column in your heatmap should represent the $(i, j)$th element in the matrix. Moreover, the color of the $(i, j)$th element should be the same as the $(j, i)$th element due to symmetry. Figure this out by reading the `heatmap()` function documentation. 
+
+In the hierarchical clustering algorithm, we need to evaluate the distance between two groups of subjects. Consider the first 5 subjects as one group, and the rest subjects as another group. For this part, you cannot use the original data matrix `x`, only the dissimilarity matrix can be used. Do the following: 
+
+* Calculate the single linkage between the two groups using the dissimilarity matrix defined based on Euclidean distance.
+* Calculate the average linkage between the two groups using the dissimilarity matrix defined based on the $\ell_1$ norm distance.
+
+```{r}
+#calculate l1 norm
+l1norm=matrix(rep(0,100),10,10)
+for (i in 1:10){
+  for(j in 1:10){
+    l1norm[i,j]=abs(x[i]-x[j])
+  }
+}
+```
+
+```{r}
+#plot the heatmap of l1 norm 
+heatmap(l1norm)
+```
+```{r}
+#plot the heatmap of euclidean distance
+euclidean=as.matrix(dist(x,diag=TRUE,upper=TRUE)) 
+heatmap(euclidean)
+```
+
+```{r}
+#calculate the single linkage
+hclust1=hclust(dist(x), method = "single")
+hclust1$height
+```
+
+```{r}
+#calculate the average linkage 
+l1norm_dist=as.dist(l1norm)
+hclust2=hclust(l1norm_dist,method="average")
+hclust2$height
+```
+
+> Question 2 (hierarchical clustering)
+
+[3 points] Load the handwritten zip code digits data from the `ElemStatLearn` package. There are two datasets: `zip.train` and `zip.test`. Take only the observations with true digits 2, 4, 6 and 8 from the training data.  
+
+```{r}
+    library(ElemStatLearn)
+    even.train.x = zip.train[zip.train[,1] %in% c(2, 4, 6, 8), -1]
+    even.train.y = as.factor(zip.train[zip.train[,1] %in% c(2, 4, 6, 8), 1])
+```
+
+Run a hierarchical clustering (with the default Euclidean distance function `dist()`) to the training dataset `even.train.x` and plot the dendrogram. Read the documentation of the `cutree()` function, and use it to define 4 clusters from your hierarchical clustering tree. Does this clustering result match the true digits well? Produce some summaries regarding how well they match. For example, the `table()` function. Now, change the linkage method to `single` and `average`, which method seems to match the true labels the best if they all just use 4 clusters? You can use \texttt{table(cutree(hclust\_fit),true\_labels)} to compare results.
+
+```{r}
+#hierarchical with complete linkage
+hclust3=hclust(dist(even.train.x))
+plot(hclust3)
+```
+```{r}
+#summary of complete linkage 
+hclust.cut <- cutree(hclust3, 4)
+table(hclust.cut, even.train.y)
+```
+4 and 6 were classified well but 2 and 8 were not.
+
+```{r}
+#hierarchical with single linkage
+hclust4=hclust(dist(even.train.x),method="single")
+hclust.cut <- cutree(hclust4, 4)
+table(hclust.cut, even.train.y)
+```
+This couldn't classify all digits at all. 
+
+```{r}
+#hierarchical with average linkage
+hclust5=hclust(dist(even.train.x),method="average")
+hclust.cut <- cutree(hclust5, 4)
+table(hclust.cut, even.train.y)
+```
+This also couldn't classify digits at all. 
+Complete methods seemed to be best to classify these four digits. 
+
+> Question 3 (PCA and clustering)
+
+[3.5 points] Use the same dataset defined in Question 2), perform PCA on the pixels. Plot all observations on the first two principal components and color the observations based on their true digits. 
+
+Take the first 3 principal components from the PCA and treat them as 3 new covariates. Hence, you have a new dataset with 3 variables, and the same number of observations as the original data. Now, perform hierarchical clustering again on this new dataset using all three linkage methods. Which one seems to match the true labels the best? You should again demonstrate some necessary results to support your argument. Is this an improvement from the original hierarchical clustering method performed on the 256 pixels? Comment on your findings. 
+
+```{r}
+#Plot all observations on the first two principal components and color the observations based on their true digits
+zip_pc = prcomp(even.train.x)
+library(ggplot2)
+library(colorspace)
+ggplot(data = data.frame(zip_pc$x), aes(x=PC1, y=PC2)) + 
+  geom_point(color = rainbow_hcl(4)[even.train.y], size = 1)
+```
+```{r}
+#complete linkage
+pc_hclust=hclust(dist(zip_pc$x[, 1:3]))
+hclust.cut <- cutree(pc_hclust, 4)
+table(hclust.cut, even.train.y)
+```
+
+```{r}
+#average linkage 
+pc_hclust=hclust(dist(zip_pc$x[, 1:3]),method="average")
+hclust.cut <- cutree(pc_hclust, 4)
+table(hclust.cut, even.train.y)
+```
+
+```{r}
+#single linkage 
+pc_hclust=hclust(dist(zip_pc$x[, 1:3]),method="single")
+hclust.cut <- cutree(pc_hclust, 4)
+table(hclust.cut, even.train.y)
+```
+2 and 4 were classified better when we used average linkage but 6 and 8 were classified better when we used complete linkage. Single linkage performed terrebile.
+There was an improvement from the original hierarchical clustering method performed on the 256 pixels.
